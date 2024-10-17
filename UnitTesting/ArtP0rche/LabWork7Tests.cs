@@ -1,4 +1,5 @@
 ﻿using Moq;
+using System.Diagnostics.Contracts;
 using TestingLib.Shop;
 using TestingLib.Weather;
 
@@ -61,13 +62,15 @@ namespace UnitTesting.ArtP0rche
             var customer = new Customer { Id = 1, Email = "fog@kiki.vom", Name = "lolo" };
             var order = new Order { Id = 1, Date = dateTime, Customer = customer, Amount = 1 };
 
-            mockCustomerRepository.Setup(repo => repo.AddCustomer(customer));
-            var orders = mockOrderRepository.Object.GetOrders().Where(o => o.Customer == customer).ToList();
+            mockCustomerRepository.Setup(repo => repo.GetCustomerById(1)).Returns(customer);
+            mockOrderRepository.Setup(repo => repo.GetOrders()).Returns(new List<Order> { order });
 
             var service = new ShopService(mockCustomerRepository.Object, mockOrderRepository.Object, mockNotificationService.Object);
             var result = service.GetCustomerInfo(1);
-
-            Assert.Equal("Customer " + customer.Name + " has " + orders.Count + " orders", result);
+            
+            Assert.Equal("Customer lolo has 1 orders", result);
+            mockCustomerRepository.Verify(repo => repo.GetCustomerById(1));
+            mockOrderRepository.Verify(repo => repo.GetOrders());
         }
     }
 }
